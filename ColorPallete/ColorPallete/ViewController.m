@@ -8,12 +8,13 @@
 
 #import "ViewController.h"
 
-@interface ViewController () {
+@interface ViewController ()
+{
     UIPopoverController *popover;
     CGPoint lastPoint;
     CGPoint currentPoint;
-
 }
+-(void)loadSavePopup;
 @end
 
 @implementation ViewController
@@ -33,6 +34,7 @@
     [longPressRecongizer setMinimumPressDuration:0.0];
     [longPressRecongizer setDelegate:self];
 
+    [self loadSavePopup];
 //    UIPanGestureRecognizer *panGesture = [[UIPanGestureRecognizer alloc]initWithTarget:self action:@selector(drawStuff:)];
 //    [panGesture setMinimumNumberOfTouches:1];
 //    [panGesture setMaximumNumberOfTouches:1];
@@ -40,6 +42,21 @@
 //    [self.view addGestureRecognizer:longPressRecongizer];
 //    [self.view bringSubviewToFront:self.colorSelectedButton];
 }
+
+
+- (void)loadSavePopup {
+    NSString* alertMessage = @"Please enter the name of file to be saved";
+    self.savePopup = [[UIAlertView alloc] initWithTitle:alertMessage
+                                                message:@""
+                                               delegate:nil
+                                      cancelButtonTitle:@"Save"
+                                      otherButtonTitles:@"Cancel", nil];
+    self.savePopup.alertViewStyle = UIAlertViewStylePlainTextInput;
+    
+    [self.savePopup setDelegate:self];
+}
+
+
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     UITouch *touch = [touches anyObject];
     lastPoint = [touch locationInView:self.view];
@@ -118,6 +135,36 @@
 
     }
 }
+
+- (IBAction)savePressed:(id)sender {
+    [self.savePopup show];
+}
+
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
+    //check if this alertview is the savePopup
+    NSString *buttonTitle=[alertView buttonTitleAtIndex:buttonIndex];
+    if (alertView == self.savePopup) {
+        if([buttonTitle isEqualToString:@"Save"]) {
+            NSString* inputFileName = [[alertView textFieldAtIndex:0] text];
+            inputFileName = [inputFileName stringByAppendingString:@".jpg"];
+            
+            NSData *data = UIImageJPEGRepresentation(self.displayImageView.image, 1.0);
+//            NSData *data = UIImagePNGRepresentation(self.displayImageView.image);
+            NSFileManager *fileManager = [NSFileManager defaultManager];
+            NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask,  YES);
+            NSString *documentsDirectory = [paths objectAtIndex:0];
+            NSString *fullPath = [documentsDirectory stringByAppendingPathComponent:inputFileName];
+            [fileManager createFileAtPath:fullPath contents:data attributes:nil];
+
+//            // Create file manager
+            NSError *error;
+
+//            // Write out the contents of home directory to console
+            NSLog(@"Documents directory: %@", [fileManager contentsOfDirectoryAtPath:documentsDirectory error:&error]);
+        }
+    }
+}
+
 
 - (void)colorPickerControllerDidChangeColor:(InfColorPickerController *)controller {
     self.colorSelectedButton.backgroundColor = controller.resultColor;

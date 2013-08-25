@@ -17,7 +17,9 @@
 @property InfColorPickerController *infController;
 @property Palette *palette;
 @property (strong, nonatomic) IBOutlet UIButton *colorSelectedButton;
+@property(strong, nonatomic) UIAlertView *savePopup;
 
 - (IBAction)buttonPressed:(id)sender;
+- (IBAction)savePressed:(id)sender;
 
 @end
