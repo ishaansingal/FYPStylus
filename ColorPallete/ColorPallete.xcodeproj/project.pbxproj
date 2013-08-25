@@ -26,6 +26,7 @@
 		C06AC7E7178C0A0F000577DA /* MainStoryboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C06AC7E5178C0A0F000577DA /* MainStoryboard.storyboard */; };
 		C06AC7EA178C0A0F000577DA /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C06AC7E9178C0A0F000577DA /* ViewController.m */; };
 		C06AC7F2178C125C000577DA /* Palette.m in Sources */ = {isa = PBXBuildFile; fileRef = C06AC7F1178C125C000577DA /* Palette.m */; };
+		C0720A1717C9E2E6003F34A3 /* Component List.pdf in Resources */ = {isa = PBXBuildFile; fileRef = C0720A1617C9E2E6003F34A3 /* Component List.pdf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -61,6 +62,7 @@
 		C06AC7E9178C0A0F000577DA /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
 		C06AC7F0178C125C000577DA /* Palette.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Palette.h; sourceTree = "<group>"; };
 		C06AC7F1178C125C000577DA /* Palette.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Palette.m; sourceTree = "<group>"; };
+		C0720A1617C9E2E6003F34A3 /* Component List.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = "Component List.pdf"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -130,6 +132,7 @@
 		C06AC7D3178C0A0F000577DA /* ColorPallete */ = {
 			isa = PBXGroup;
 			children = (
+				C0720A1817C9E2EA003F34A3 /* Files */,
 				C06AC7DC178C0A0F000577DA /* AppDelegate.h */,
 				C06AC7DD178C0A0F000577DA /* AppDelegate.m */,
 				C06AC7E5178C0A0F000577DA /* MainStoryboard.storyboard */,
@@ -154,6 +157,14 @@
 				C06AC7E3178C0A0F000577DA /* Default-568h@2x.png */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		C0720A1817C9E2EA003F34A3 /* Files */ = {
+			isa = PBXGroup;
+			children = (
+				C0720A1617C9E2E6003F34A3 /* Component List.pdf */,
+			);
+			name = Files;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -213,6 +224,7 @@
 				C06AC7E4178C0A0F000577DA /* Default-568h@2x.png in Resources */,
 				C06AC7E7178C0A0F000577DA /* MainStoryboard.storyboard in Resources */,
 				C03B9078178E7B1800E8710F /* InfColorPickerView.xib in Resources */,
+				C0720A1717C9E2E6003F34A3 /* Component List.pdf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
