@@ -6,15 +6,24 @@
 //  Copyright (c) 2013 ishaan.practise. All rights reserved.
 //
 
-#import "ViewController.h"
+///Users/ishaansingal/Library/Application Support/iPhone Simulator/6.1/Applications/CEAC91A8-B0C9-45D9-B4C3-F77736F13226
 
-@interface ViewController ()
+
+#import "ViewController.h"
+#import "LineWidthController.h"
+
+@interface ViewController () <LineWidthControllerDelegate>
 {
+        CGPoint pts[5]; // we now need to keep track of the four points of a Bezier segment and the first control point of the next segment
+        uint ctr;
+
     UIPopoverController *popover;
     CGPoint lastPoint;
     CGPoint currentPoint;
 }
--(void)loadSavePopup;
+@property int lineWidth;
+@property (copy) NSString* drawingTitle;
+-(void)configureSavePopup;
 @end
 
 @implementation ViewController
@@ -26,25 +35,24 @@
 //    [self.view addSubview:self.palette];
 //    [self.view sendSubviewToBack:self.palette];
     
-    self.infController = [InfColorPickerController colorPickerViewController];
-    [self.infController setDelegate:self];
-    popover = [[UIPopoverController alloc]initWithContentViewController:self.infController];
+//    self.infController = [InfColorPickerController colorPickerViewController];
+//    [self.infController setDelegate:self];
+//    popover = [[UIPopoverController alloc]initWithContentViewController:self.infController];
 
 //    UILongPressGestureRecognizer *longPressRecongizer = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(drawStuff:)];
 //    [longPressRecongizer setMinimumPressDuration:0.0];
 //    [longPressRecongizer setDelegate:self];
 
-    [self loadSavePopup];
-//    UIPanGestureRecognizer *panGesture = [[UIPanGestureRecognizer alloc]initWithTarget:self action:@selector(drawStuff:)];
-//    [panGesture setMinimumNumberOfTouches:1];
-//    [panGesture setMaximumNumberOfTouches:1];
-//    [panGesture setDelegate:self];
-//    [self.view addGestureRecognizer:longPressRecongizer];
-//    [self.view bringSubviewToFront:self.colorSelectedButton];
+    [self updateDrawingTitle];
+    [self updateSettings];
+//    [self configureSavePopup];
 }
 
+-(void)updateSettings {
+    self.lineWidth = 10;
+}
 
-- (void)loadSavePopup {
+- (void)configureSavePopup {
     NSString* alertMessage = @"Please enter the name of file to be saved";
     self.savePopup = [[UIAlertView alloc] initWithTitle:alertMessage
                                                 message:@""
@@ -56,91 +64,139 @@
     [self.savePopup setDelegate:self];
 }
 
+- (BOOL)shouldTrackTouch:(UITouch*)touch {
+    
+    //don't track when showing map view
+
+    CGPoint touchLocation = [touch locationInView:self.displayImageView];
+    if ((touchLocation.y < 0) || (touchLocation.y > self.displayImageView.frame.size.height)) {
+        return NO;
+    }
+    
+    return YES;
+    
+}
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     UITouch *touch = [touches anyObject];
-    lastPoint = [touch locationInView:self.view];
+    lastPoint = [touch locationInView:self.displayImageView];
+    pts[0] = lastPoint;
+    ctr = 0;
 }
 
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
     UITouch *touch = [touches anyObject];
-    currentPoint = [touch locationInView:self.view];
+    currentPoint = [touch locationInView:self.displayImageView];
 
-    CGSize screenSize = self.view.frame.size;
-    UIGraphicsBeginImageContext(screenSize);
-    CGContextRef currentContext = UIGraphicsGetCurrentContext();
-    [self.displayImageView.image drawInRect:CGRectMake(0, 0, screenSize.width, screenSize.height)];
+    ctr++;
+    pts[ctr] = currentPoint;
+    if (ctr == 4)
+    {
+        pts[3] = CGPointMake((pts[2].x + pts[4].x)/2.0, (pts[2].y + pts[4].y)/2.0); // move the endpoint to the middle of the line joining the second control point of the first Bezier segment and the first control point of the second Bezier segment
+        
     
-//    CGContextSetLineCap(currentContext, kCGLineCapRound);
-    CGContextSetLineWidth(currentContext, 1.0);
-    CGContextSetStrokeColorWithColor(currentContext, (self.colorSelectedButton.backgroundColor).CGColor);
-//    CGContextSetAlpha(currentContext, 0.2f);
-    CGContextBeginPath(currentContext);
-    CGContextMoveToPoint(currentContext, lastPoint.x, lastPoint.y);
-    CGContextAddLineToPoint(currentContext, currentPoint.x, currentPoint.y);
-    CGContextSetBlendMode(currentContext,kCGBlendModeNormal);
-    CGContextStrokePath(currentContext);
-    
-    self.displayImageView.image = UIGraphicsGetImageFromCurrentImageContext();
-    [self.displayImageView setAlpha:1];
-    
-    UIGraphicsEndImageContext();
-    lastPoint = currentPoint;
-}
-
-- (void)drawStuff:(UILongPressGestureRecognizer*)sender {
-    if (sender.state == UIGestureRecognizerStateBegan) {
-    }
-    else if (sender.state == UIGestureRecognizerStateChanged) {
-        currentPoint = [sender locationInView:self.view];
-
-        CGSize screenSize = self.view.frame.size;
+        CGSize screenSize = self.displayImageView.frame.size;
         UIGraphicsBeginImageContext(screenSize);
         CGContextRef currentContext = UIGraphicsGetCurrentContext();
         [self.displayImageView.image drawInRect:CGRectMake(0, 0, screenSize.width, screenSize.height)];
         
         CGContextSetLineCap(currentContext, kCGLineCapRound);
-        CGContextSetLineWidth(currentContext, 10.0);
-
-        CGContextSetStrokeColorWithColor(currentContext, [UIColor colorWithRed:255 green:255 blue:0 alpha:0.4f].CGColor);
-        CGContextBeginPath(currentContext);
-        CGContextMoveToPoint(currentContext, lastPoint.x, lastPoint.y);
-        CGContextAddLineToPoint(currentContext, currentPoint.x, currentPoint.y);
+        CGContextSetLineWidth(currentContext, self.lineWidth);
+        CGContextSetStrokeColorWithColor(currentContext, (self.colorSelectButton.tintColor).CGColor);
+        //    CGContextSetAlpha(currentContext, 0.4f);
+        //    CGContextBeginPath(currentContext);
+        CGContextMoveToPoint(currentContext, pts[0].x, pts[0].y);
+        //    CGContextAddLineToPoint(currentContext, currentPoint.x, currentPoint.y);
+        CGContextAddCurveToPoint(currentContext, pts[1].x, pts[1].y,pts[2].x, pts[2].y, pts[3].x, pts[3].y);
         CGContextSetBlendMode(currentContext,kCGBlendModeNormal);
         CGContextStrokePath(currentContext);
         
         self.displayImageView.image = UIGraphicsGetImageFromCurrentImageContext();
-//        [self.displayImageView setAlpha:1];
-
-        UIGraphicsEndImageContext();
+        [self.displayImageView setAlpha: 0.4f];
         
+        UIGraphicsEndImageContext();
         lastPoint = currentPoint;
+        
+        pts[0] = pts[3];
+        pts[1] = pts[4];
+        ctr = 1;
+
     }
 }
 
-
-- (void)didReceiveMemoryWarning
+- (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
 {
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
+    ctr = 0;
 }
 
-//- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
-//}
-
-
-
-- (IBAction)buttonPressed:(id)sender {
-    if ([(UIButton*)sender isEqual:self.colorSelectedButton]) {
-        [popover presentPopoverFromRect:self.colorSelectedButton.frame inView:self.view permittedArrowDirections:UIPopoverArrowDirectionAny animated:YES];
-
-    }
-}
 
 - (IBAction)savePressed:(id)sender {
-    [self setPDFPage];
-//    [self.savePopup show];
+//    [self testMethod];
+    [self.savePopup show];
 }
+
+- (IBAction)loadPressed:(id)sender {
+    [self setPDFPage];
+}
+
+- (IBAction)colorButtonPressed:(id)sender {
+    [popover presentPopoverFromBarButtonItem:(UIBarButtonItem*)sender permittedArrowDirections:UIPopoverArrowDirectionUp animated:YES];
+}
+
+- (IBAction)sidebarPressed:(id)sender {
+    if (self.sideView.hidden == NO) {
+        [UIView beginAnimations:nil context:nil];
+        [UIView setAnimationDuration:0.3];
+        CGRect sideFrame = self.sideView.frame;
+        CGRect displayViewFrame = self.displayImageView.frame;
+        
+        if (sideFrame.origin.x >= 0) {
+            sideFrame.origin.x = -self.sideView.frame.size.width;
+        }
+        else {
+            sideFrame.origin.x = 0;
+        }
+        self.sideView.frame = sideFrame;
+        
+        displayViewFrame.origin.x = sideFrame.origin.x + sideFrame.size.width;
+        displayViewFrame.size.width = 1024 - displayViewFrame.origin.x;
+        self.displayImageView.frame = displayViewFrame;
+        [UIView commitAnimations];
+    }
+}
+
+- (void)updateDrawingTitle {
+    if (self.titleTextField.text.length > 0) {
+        [self.titleButton setTitle:self.titleTextField.text forState:UIControlStateNormal];
+    } else {
+        [self.titleButton setTitle:@"Tap to add title" forState:UIControlStateNormal];
+    }
+    
+}
+
+- (IBAction)titleButtonPressed:(id)sender {
+    self.titleButton.hidden = YES;
+    self.titleTextField.text = self.drawingTitle;
+    self.titleTextField.hidden = NO;
+    [self.titleTextField becomeFirstResponder];
+}
+
+
+- (void)textFieldDidEndEditing:(UITextField*)textField {
+
+    self.drawingTitle = self.titleTextField.text;
+    [self updateDrawingTitle];
+    self.titleTextField.hidden = YES;
+    self.titleButton.hidden = NO;
+//
+}
+
+//UITextField Done button
+- (BOOL)textFieldShouldReturn:(UITextField *)theTextField {
+    [self.titleTextField resignFirstResponder];
+    return YES;
+}
+
 
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
     //check if this alertview is the savePopup
@@ -151,6 +207,7 @@
             
             NSString* inputFileName = [[alertView textFieldAtIndex:0] text];
             inputFileName = [inputFileName stringByAppendingString:@".jpg"];
+        
             
             NSData *data = UIImageJPEGRepresentation(self.displayImageView.image, 1.0);
 //            NSData *data = UIImagePNGRepresentation(self.displayImageView.image);
@@ -177,8 +234,8 @@
 
     // Determine the size of the PDF page.
     CGRect pageRect = CGPDFPageGetBoxRect(PDFPage, kCGPDFMediaBox);
-    CGFloat PDFScale = self.view.frame.size.width/pageRect.size.width;
-    pageRect.size = CGSizeMake(pageRect.size.width * PDFScale, pageRect.size.height * PDFScale);
+//    CGFloat PDFScale = self.view.frame.size.width/pageRect.size.width;
+//    pageRect.size = CGSizeMake(pageRect.size.width * PDFScale, pageRect.size.height * PDFScale);
     
     
     /*
@@ -197,7 +254,7 @@
     CGContextScaleCTM(context, 1.0, -1.0);
     
     // Scale the context so that the PDF page is rendered at the correct size for the zoom level.
-    CGContextScaleCTM(context, PDFScale, PDFScale);
+//    CGContextScaleCTM(context, PDFScale, PDFScale);
     CGContextDrawPDFPage(context, PDFPage);
     CGContextRestoreGState(context);
     
@@ -218,39 +275,23 @@
 
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask,  YES);
     NSString *documentsDirectory = [paths objectAtIndex:0];
-    NSString *originalPdfPath = [documentsDirectory stringByAppendingPathComponent:@"Component List.pdf"];
-    
-    NSData *pdfData = [NSData dataWithContentsOfFile:originalPdfPath options:NSDataReadingUncached error:&error];
-    
-    if (error)
-    {
-        NSLog(@"%@", [error localizedDescription]);
-        return;
-    }
-    else
-        NSLog(@"Data has loaded successfully.");
-    
-//    //If fails to create the new file, return    
+
     NSString *NewPdfPath = [documentsDirectory stringByAppendingPathComponent:@"Edited List.pdf"];
 
-    if (![[NSFileManager defaultManager] createFileAtPath:NewPdfPath contents:pdfData attributes:nil])
-    {
-        return;
-    }
+//    if (![[NSFileManager defaultManager] createFileAtPath:NewPdfPath contents:pdfData attributes:nil])
+//    {
+//        return;
+//    }
     
-    NSURL *url = [NSURL fileURLWithPath:originalPdfPath];
-    CGPDFDocumentRef document = CGPDFDocumentCreateWithURL ((__bridge_retained CFURLRef) url);
-    size_t count = CGPDFDocumentGetNumberOfPages(document);
+//    NSURL *url = [NSURL fileURLWithPath:originalPdfPath];
+//    CGPDFDocumentRef document = CGPDFDocumentCreateWithURL ((__bridge_retained CFURLRef) url);
+//    size_t count = CGPDFDocumentGetNumberOfPages(document);
     
-    if (count == 0)
-    {
-        NSLog(@"PDF needs at least one page");
-        return;
-    }
-    
-//    CGRect pageRect = CGPDFPageGetBoxRect(_PDFPage, kCGPDFMediaBox);
+//  CGRect pageRect = CGPDFPageGetBoxRect(_PDFPage, kCGPDFMediaBox);
 
     CGRect paperSize = CGRectMake(0, 0, 768, 1024);
+
+    UIGraphicsBeginPDFPageWithInfo(paperSize, nil);
     
     UIGraphicsBeginPDFContextToFile(NewPdfPath , paperSize, nil);
     // CGPDFPageRef page = CGPDFDocumentGetPage(document, 1);
@@ -260,9 +301,9 @@
     CGContextTranslateCTM(currentContext, 0, paperSize.size.height);
     CGContextScaleCTM(currentContext, 1.0, -1.0);
     
-    CGPDFPageRef page = CGPDFDocumentGetPage (document, 1); // grab page 1 of the PDF
+//    CGPDFPageRef page = CGPDFDocumentGetPage (document, 1); // grab page 1 of the PDF
     
-    CGContextDrawPDFPage (currentContext, page); // draw page 1 into graphics context
+//    CGContextDrawPDFPage (currentContext, page); // draw page 1 into graphics context
     
     // flip context so annotations are right way up
     CGContextScaleCTM(currentContext, 1.0, -1.0);
@@ -273,8 +314,59 @@
     UIGraphicsEndPDFContext();
 }
 
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    LineWidthController *viewController = (LineWidthController*)segue.destinationViewController;
+    viewController.lineWidth = self.lineWidth;
+    viewController.delegate = self;
+}
+
 - (void)colorPickerControllerDidChangeColor:(InfColorPickerController *)controller {
-    self.colorSelectedButton.backgroundColor = controller.resultColor;
-    self.palette.drawingPenColor = self.colorSelectedButton.backgroundColor;    
+    self.colorSelectButton.tintColor = controller.resultColor;
+}
+
+-(void)viewController:(LineWidthController *)viewController didPickWidth:(int)lineWidth {
+    self.lineWidth = viewController.lineWidth;
+}
+
+
+#pragma mark - rotation for ios 5
+// Override to allow orientations other than the default portrait orientation.
+// Rotation for v. 5.1.1
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
+    if (interfaceOrientation == UIInterfaceOrientationLandscapeLeft)
+        return YES;
+    if (interfaceOrientation == UIInterfaceOrientationLandscapeRight)
+        return YES;
+    
+    return NO;
+}
+
+// Rotation 6.0
+// Tell the system It should autorotate
+- (BOOL) shouldAutorotate {
+    return YES;
+}
+
+//// Tell the system which initial orientation we want to have
+- (UIInterfaceOrientation)preferredInterfaceOrientationForPresentation {
+    return UIInterfaceOrientationPortrait;
+}
+
+// Tell the system what we support
+- (NSUInteger)supportedInterfaceOrientations {
+    return UIInterfaceOrientationMaskAll;
+}
+
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+- (void)viewDidUnload {
+    [self setTitleButton:nil];
+    [self setTitleTextField:nil];
+    [super viewDidUnload];
 }
 @end

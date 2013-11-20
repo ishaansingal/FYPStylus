@@ -11,15 +11,20 @@
 #import <QuartzCore/QuartzCore.h>
 #import "InfColorPicker/InfColorPickerController.h"
 
-@interface ViewController : UIViewController <UIGestureRecognizerDelegate, InfColorPickerControllerDelegate>
+@interface ViewController : UIViewController <UIGestureRecognizerDelegate, InfColorPickerControllerDelegate,UITextFieldDelegate>
 
 @property (strong, nonatomic) IBOutlet UIImageView *displayImageView;
 @property InfColorPickerController *infController;
-@property Palette *palette;
-@property (strong, nonatomic) IBOutlet UIButton *colorSelectedButton;
 @property(strong, nonatomic) UIAlertView *savePopup;
+@property (strong, nonatomic) IBOutlet UIBarButtonItem *colorSelectButton;
+@property (strong, nonatomic) IBOutlet UIView *sideView;
+@property (strong, nonatomic) IBOutlet UIButton *titleButton;
+@property (strong, nonatomic) IBOutlet UITextField *titleTextField;
 
-- (IBAction)buttonPressed:(id)sender;
 - (IBAction)savePressed:(id)sender;
+- (IBAction)loadPressed:(id)sender;
+- (IBAction)colorButtonPressed:(id)sender;
+- (IBAction)sidebarPressed:(id)sender;
+- (IBAction)titleButtonPressed:(id)sender;
 
 @end
